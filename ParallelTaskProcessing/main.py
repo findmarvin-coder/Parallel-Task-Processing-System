@@ -52,7 +52,7 @@ def box(lines, double=False, align="left", title=""):
 
 
 def table(headers, rows, widths, aligns):
-    """Print a grid table. The last row is shown in bold."""
+
     def line(l, m, r):
         return l + m.join("─" * (w + 2) for w in widths) + r
 
