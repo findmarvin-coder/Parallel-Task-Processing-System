@@ -53,10 +53,8 @@ def screen(title, lines=None):
     print("└" + "─" * inner + "┘")
 
 def ask_int(prompt, default, high=10_000_000):
-    inner = WIDTH - 2
-    print("┌" + "─" * inner + "┐")
-    raw = input(f"│ {prompt} [{default:,}]: ").replace(",", "").strip()
-    print("└" + "─" * inner + "┘")
+    # Removed the broken box here - just a clean prompt below the previous box
+    raw = input(f"\n{prompt} [{default:,}]: ").replace(",", "").strip()
     
     if raw.isdigit() and 0 < int(raw) <= high:
         return int(raw)
@@ -151,10 +149,7 @@ def compare():
         "Results match: " + paint("YES" if match else "NO", match)
     ])
 
-    inner = WIDTH - 2
-    print("┌" + "─" * inner + "┐")
-    run_tests = input("│ Run the 5 dataset tests and save to results/? (Y/n): ").lower()
-    print("└" + "─" * inner + "┘")
+    run_tests = input("\nRun the 5 dataset tests and save to results/? (Y/n): ").lower()
     
     if run_tests != "n":
         benchmark()
@@ -189,7 +184,7 @@ def benchmark():
         
     screen("DATASET TESTING", lines)
     
-    print(paint("Saved: " + os.path.relpath(save_csv(rows)), True))
+    print(paint("\nSaved: " + os.path.relpath(save_csv(rows)), True))
     graph = save_graph(rows, state["processes"])
     
     if graph:
@@ -208,14 +203,12 @@ ACTIONS = {
 }
 
 def main():
-    inner = WIDTH - 2
     while True:
         clear()
         show_menu()
         
-        print("┌" + "─" * inner + "┐")
-        choice = input("│ Enter your choice: ").strip()
-        print("└" + "─" * inner + "┘")
+        # Clean prompt matching the professor's overview document
+        choice = input("\nEnter your choice: ").strip()
         
         if choice == "6":
             clear()
@@ -228,9 +221,7 @@ def main():
         else:
             screen("NOTICE", [paint("Invalid choice. Please enter 1-6.", False)])
             
-        print("┌" + "─" * inner + "┐")
-        input("│ Press Enter to return to the menu...")
-        print("└" + "─" * inner + "┘")
+        input("\nPress Enter to return to the menu...")
 
 if __name__ == "__main__":
     mp.freeze_support()
