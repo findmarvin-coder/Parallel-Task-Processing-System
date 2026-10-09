@@ -52,6 +52,7 @@ def screen(title, lines=None):
             
     print("└" + "─" * inner + "┘")
 
+<<<<<<< HEAD
 def ask_int(prompt, default, high=10_000_000):
     inner = WIDTH - 2
     print("┌" + "─" * inner + "┐")
@@ -59,6 +60,49 @@ def ask_int(prompt, default, high=10_000_000):
     print("└" + "─" * inner + "┘")
     
     if raw.isdigit() and 0 < int(raw) <= high:
+=======
+
+def table(headers, rows, widths, aligns):
+
+    def line(l, m, r):
+        return l + m.join("─" * (w + 2) for w in widths) + r
+
+    def row(cells, bold=False):
+        cells = [f"{BOLD}{c}{RESET}" if bold else c for c in cells]
+        return "│" + "│".join(f" {pad(c, w, a)} " for c, w, a in zip(cells, widths, aligns)) + "│"
+
+    print(line("┌", "┬", "┐"))
+    print(row(headers, bold=True))
+    print(line("├", "┼", "┤"))
+    for i, r in enumerate(rows):
+        print(row(r, bold=(i == len(rows) - 1)))
+    print(line("└", "┴", "┘"))
+
+
+def bar(value, maximum, color, width=28):
+    filled = max(1, round(width * value / maximum)) if maximum > 0 else 0
+    return f"{color}{'█' * filled}{RESET}{'░' * (width - filled)}"
+
+
+def good(msg):
+    print(f"\n {GREEN}[OK]{RESET} {msg}")
+
+
+def bad(msg):
+    print(f"\n {RED}[ERROR]{RESET} {msg}")
+
+
+def section(name):
+    print()
+    box(f"{BOLD}{name}{RESET}", align="center")
+
+
+def ask_int(prompt, default, low=1, high=10_000_000):
+    raw = input(f" {prompt} [{default:,}]: ").strip().replace(",", "")
+    if raw == "":
+        return default
+    if raw.isdigit() and low <= int(raw) <= high:
+>>>>>>> a75766dafca95be47224785ffd270580f3174b02
         return int(raw)
     if raw:
         print(paint(f"Invalid number. Using {default:,}.", False))
