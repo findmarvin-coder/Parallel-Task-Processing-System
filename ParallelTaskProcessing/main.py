@@ -1,5 +1,6 @@
 import multiprocessing as mp
 import os
+import re
 import sys
 
 from data_generator import generate_data
@@ -7,167 +8,229 @@ from sequential import run_sequential
 from parallel import run_parallel
 from performance import run_benchmark, save_csv, save_graph, speedup, verify
 
-# ======================================================================
-# PART 1 - INTRODUCTION & SYSTEM DESIGN   (Marvin)
-# Screen design, menu, program state, data generation
-# ======================================================================
+# PART 1 - Marvin
+
 COLOR = sys.stdout.isatty()
 if COLOR and os.name == "nt":
-    os.system("")                                  # enable colors on Windows
+    os.system("")
+
 GREEN, RED, RESET = ("\033[92m", "\033[91m", "\033[0m") if COLOR else ("", "", "")
+WIDTH = 56
 
-state = {"data": None, "seq": None, "par": None, "processes": mp.cpu_count()}
-
+state = {
+    "data": None, 
+    "seq": None, 
+    "par": None, 
+    "processes": mp.cpu_count()
+}
 
 def clear():
-    if COLOR:
-        os.system("cls" if os.name == "nt" else "clear")
-
-
-def banner(text, line="="):
-    """Centered banner between two lines."""
-    print(f"{line * 40}\n{text.center(40).rstrip()}\n{line * 40}")
-
+    if os.name == 'nt':
+        os.system('cls')
+    else:
+        os.system('clear')
+        print('\033[2J\033[H', end='')
+    screen("METRO BUSINESS COLLEGE", ["FINAL PROJECT".center(WIDTH - 4)])
 
 def paint(text, ok):
     return f"{GREEN if ok else RED}{text}{RESET}"
 
+def screen(title, lines=None):
+    if lines is None:
+        lines = []
+    
+    inner = WIDTH - 2
+    print("┌" + "─" * inner + "┐")
+    print("│" + title.center(inner) + "│")
+    
+    if lines:
+        print("├" + "─" * inner + "┤")
+        for line in lines:
+            visible_len = len(re.sub(r"\033\[[0-9;]*m", "", line))
+            gap = max(0, inner - 2 - visible_len)
+            print("│ " + line + " " * gap + " │")
+            
+    print("└" + "─" * inner + "┘")
 
 def ask_int(prompt, default, high=10_000_000):
-    raw = input(f"{prompt} [{default:,}]: ").replace(",", "").strip()
+    inner = WIDTH - 2
+    print("┌" + "─" * inner + "┐")
+    raw = input(f"│ {prompt} [{default:,}]: ").replace(",", "").strip()
+    print("└" + "─" * inner + "┘")
+    
     if raw.isdigit() and 0 < int(raw) <= high:
         return int(raw)
     if raw:
         print(paint(f"Invalid number. Using {default:,}.", False))
     return default
 
-
 def has_data():
     if state["data"] is None:
-        print(paint("No data yet. Choose [1] Generate Data first.", False))
-    return state["data"] is not None
-
+        screen("NOTICE", [paint("No data yet. Choose [1] Generate Data.", False)])
+        return False
+    return True
 
 def show_menu():
-    banner("PARALLEL TASK PROCESSING SYSTEM")
-    print("[1] Generate Data\n[2] Sequential Processing\n[3] Parallel Processing")
-    print("[4] Performance Comparison\n[5] Display Results\n[6] Exit")
-
+    screen("PARALLEL TASK PROCESSING SYSTEM", [
+        "[1] Generate Data", 
+        "[2] Sequential Processing", 
+        "[3] Parallel Processing",
+        "[4] Performance Comparison", 
+        "[5] Display Results", 
+        "[6] Exit"
+    ])
 
 def generate():
-    banner("PARALLEL TASK PROCESSING SYSTEM")
     size = ask_int("Number of data", 100_000)
-    print(f"Generating {size:,} numbers...")
     state["data"] = generate_data(size)
-    state["seq"] = state["par"] = None
-    print(paint("Data successfully generated!", True))
+    state["seq"] = None
+    state["par"] = None
+    clear()
+    screen("GENERATE DATA", [
+        f"Generating {size:,} numbers...", 
+        "",
+        paint("Data successfully generated!", True)
+    ])
 
+# PART 2 - 
 
-# ======================================================================
-# PART 2 - SEQUENTIAL PROCESSING   (Member 2)
-# ======================================================================
-def show_result(r, parallel=False):
-    if parallel:
-        print(f"Number of Processes: {r['processes']}\n")
-    print(f"Total: {r['total']:,}\nAverage: {r['average']:.2f}")
-    print(f"Minimum: {r['min']}\nMaximum: {r['max']}\n")
-    print(f"Even Numbers: {r['even']:,}\nOdd Numbers: {r['odd']:,}\n")
-    print(f"Execution Time: {r['time']:.4f} seconds")
-
+def result_lines(r, parallel=False):
+    lines = [f"Number of Processes: {r['processes']}", ""] if parallel else []
+    return lines + [
+        f"Total: {r['total']:,}", 
+        f"Average: {r['average']:.2f}",
+        f"Minimum: {r['min']}", 
+        f"Maximum: {r['max']}", 
+        "",
+        f"Even Numbers: {r['even']:,}", 
+        f"Odd Numbers: {r['odd']:,}", 
+        "",
+        f"Execution Time: {r['time']:.4f} seconds"
+    ]
 
 def sequential():
     if has_data():
-        banner("SEQUENTIAL PROCESSING", "-")
         state["seq"] = run_sequential(state["data"])
-        show_result(state["seq"])
+        clear()
+        screen("SEQUENTIAL PROCESSING", result_lines(state["seq"]))
 
+# PART 3 - 
 
-# ======================================================================
-# PART 3 - PARALLEL PROCESSING   (Member 3)
-# ======================================================================
 def parallel():
     if has_data():
         state["processes"] = ask_int("Number of processes", state["processes"], 64)
-        banner("PARALLEL PROCESSING", "-")
         state["par"] = run_parallel(state["data"], state["processes"])
-        show_result(state["par"], parallel=True)
+        clear()
+        screen("PARALLEL PROCESSING", result_lines(state["par"], parallel=True))
 
+# PART 4 - Faye
 
-# ======================================================================
-# PART 4 - PERFORMANCE ANALYSIS   (Faye)
-# Comparison, display results, dataset tests, CSV and graph
-# ======================================================================
 def compare():
     if not has_data():
         return
+        
     state["seq"] = state["seq"] or run_sequential(state["data"])
     state["par"] = state["par"] or run_parallel(state["data"], state["processes"])
-    s, p = state["seq"], state["par"]
+    
+    s = state["seq"]
+    p = state["par"]
     faster = p["time"] < s["time"]
-
-    banner("PERFORMANCE COMPARISON", "-")
-    print(f"Sequential Time : {s['time']:.4f} seconds")
-    print(f"Parallel Time   : {p['time']:.4f} seconds\n")
     gain = f"{speedup(s['time'], p['time']):.2f}x"
-    print(f"Speed Improvement: {paint(gain, faster)}\n")
-    print(paint("Parallel processing was faster\nfor this workload." if faster else
-                "Sequential processing was faster\nfor this workload.", faster))
-    print("\nResults match:", paint("YES" if verify(s, p) else "NO", verify(s, p)))
+    match = verify(s, p)
 
-    if input("\nRun the 5 dataset tests (CSV + graph)? (y/n): ").lower() == "y":
+    clear()
+    screen("PERFORMANCE COMPARISON", [
+        f"Sequential Time : {s['time']:.4f} seconds",
+        f"Parallel Time   : {p['time']:.4f} seconds", 
+        "",
+        f"Speed Improvement: {paint(gain, faster)}", 
+        "",
+        paint("Parallel processing was faster" if faster else "Sequential processing was faster", faster),
+        paint("for this workload.", faster), 
+        "",
+        "Results match: " + paint("YES" if match else "NO", match)
+    ])
+
+    inner = WIDTH - 2
+    print("┌" + "─" * inner + "┐")
+    run_tests = input("│ Run the 5 dataset tests and save to results/? (Y/n): ").lower()
+    print("└" + "─" * inner + "┘")
+    
+    if run_tests != "n":
         benchmark()
-
 
 def display():
     if not (state["seq"] or state["par"]):
-        print(paint("Nothing to display yet. Run a processing option first.", False))
+        screen("NOTICE", [paint("Nothing to display yet.", False)])
     if state["seq"]:
-        banner("SEQUENTIAL PROCESSING", "-")
-        show_result(state["seq"])
-        print()
+        screen("SEQUENTIAL PROCESSING", result_lines(state["seq"]))
     if state["par"]:
-        banner("PARALLEL PROCESSING", "-")
-        show_result(state["par"], parallel=True)
-
+        screen("PARALLEL PROCESSING", result_lines(state["par"], parallel=True))
 
 def benchmark():
     clear()
-    banner("DATASET TESTING", "-")
-    print(f"Number of Processes: {state['processes']}\n")
+    print(f"Running 5 tests with {state['processes']} processes...\n")
     rows = run_benchmark(state["processes"])
-    print(f"{'Dataset':>10}  {'Sequential':>12}  {'Parallel':>12}  {'Speedup':>8}")
+    clear()
+    
+    lines = [
+        f"Number of Processes: {state['processes']}", 
+        "",
+        f"{'Dataset':>10}  {'Sequential':>11}  {'Parallel':>11}  {'Speedup':>7}"
+    ]
+    
     for r in rows:
-        print(f"{r['dataset']:>10,}  {r['sequential']:>9.4f} sec  {r['parallel']:>9.4f} sec  "
-              + paint(f"{r['speedup']:.2f}x".rjust(8), r["speedup"] > 1))
+        speedup_str = f"{r['speedup']:.2f}x".rjust(7)
+        lines.append(f"{r['dataset']:>10,}  {r['sequential']:>8.4f} s  {r['parallel']:>8.4f} s  "
+                     + paint(speedup_str, r["speedup"] > 1))
+                     
     if not all(r["correct"] for r in rows):
-        print(paint("\nSome tests produced mismatched results!", False))
-    print(f"\nCSV saved   : {save_csv(rows)}")
+        lines += ["", paint("Some tests produced mismatched results!", False)]
+        
+    screen("DATASET TESTING", lines)
+    
+    print(paint("Saved: " + os.path.relpath(save_csv(rows)), True))
     graph = save_graph(rows, state["processes"])
-    print(f"Graph saved : {graph}" if graph else paint("Graph skipped (pip install matplotlib)", False))
+    
+    if graph:
+        print(paint("Saved: " + os.path.relpath(graph), True))
+    else:
+        print(paint("Graph not saved. Run: pip install matplotlib", False))
 
+# PART 5 - 
 
-# ======================================================================
-#                            MAIN PROGRAM
-# ======================================================================
-ACTIONS = {"1": generate, "2": sequential, "3": parallel, "4": compare, "5": display}
-
+ACTIONS = {
+    "1": generate, 
+    "2": sequential, 
+    "3": parallel, 
+    "4": compare, 
+    "5": display
+}
 
 def main():
+    inner = WIDTH - 2
     while True:
         clear()
         show_menu()
-        choice = input("Enter your choice: ").strip()
+        
+        print("┌" + "─" * inner + "┐")
+        choice = input("│ Enter your choice: ").strip()
+        print("└" + "─" * inner + "┘")
+        
         if choice == "6":
             clear()
-            banner("PROGRAM COMPLETED")
+            screen("PROGRAM COMPLETED")
             break
+            
         clear()
         if choice in ACTIONS:
             ACTIONS[choice]()
         else:
-            print(paint("Invalid choice. Please enter 1-6.", False))
-        input("\nPress Enter to return to the menu...")
-
+            screen("NOTICE", [paint("Invalid choice. Please enter 1-6.", False)])
+            
+        print("┌" + "─" * inner + "┐")
+        input("│ Press Enter to return to the menu...")
+        print("└" + "─" * inner + "┘")
 
 if __name__ == "__main__":
     mp.freeze_support()
