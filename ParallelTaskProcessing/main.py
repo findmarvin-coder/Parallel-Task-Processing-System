@@ -216,7 +216,6 @@ def benchmark():
     else:
         print(paint("Graph not saved. Run: pip install matplotlib", False))
 
-# PART 5 - 
 
 ACTIONS = {
     "1": generate, 

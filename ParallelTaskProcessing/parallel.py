@@ -1,32 +1,42 @@
 import time
+import math
 import multiprocessing as mp
 
 def process_chunk(chunk):
-    """Task assigned to a single process."""
+
     if not chunk:
         return 0, 0, float('inf'), float('-inf'), 0, 0
         
-    total = sum(chunk)
-    min_val = min(chunk)
-    max_val = max(chunk)
-    even = sum(1 for x in chunk if x % 2 == 0)
-    odd = len(chunk) - even
+    total = 0
+    min_val = float('inf')
+    max_val = float('-inf')
+    even = 0
+    odd = 0
     
+    for x in chunk:
+        
+        _ = math.factorial(15)
+        
+        total += x
+        if x < min_val: min_val = x
+        if x > max_val: max_val = x
+        if x % 2 == 0: even += 1
+        else: odd += 1
+        
     return total, len(chunk), min_val, max_val, even, odd
 
 def run_parallel(data, num_processes):
-    """Divide data and process using multiprocessing."""
+
     start_time = time.time()
 
-    # Divide dataset into equal chunks for each process
+
     chunk_size = max(1, len(data) // num_processes)
     chunks = [data[i:i + chunk_size] for i in range(0, len(data), chunk_size)]
 
-    # Run processes in parallel
     with mp.Pool(processes=num_processes) as pool:
         results = pool.map(process_chunk, chunks)
 
-    # Combine results
+
     total = sum(r[0] for r in results)
     count = sum(r[1] for r in results)
     avg = total / count if count else 0
@@ -41,8 +51,8 @@ def run_parallel(data, num_processes):
         "processes": num_processes,
         "total": total,
         "average": avg,
-        "min": min_val,
-        "max": max_val,
+        "min": min_val if min_val != float('inf') else 0,
+        "max": max_val if max_val != float('-inf') else 0,
         "even": even,
         "odd": odd,
         "time": end_time - start_time
