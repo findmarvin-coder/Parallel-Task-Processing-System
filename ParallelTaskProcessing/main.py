@@ -70,14 +70,20 @@ def screen(title, lines=None, typewrite=False):
                 print("│ " + line + " " * gap + " │")
             
     print("└" + "─" * inner + "┘")
-def ask_int(prompt, default, high=10_000_000):
-    raw = input(f"\n{prompt} [{default:,}]: ").replace(",", "").strip()
-    
-    if raw.isdigit() and 0 < int(raw) <= high:
-        return int(raw)
-    if raw:
-        print(paint(f"Invalid number. Using {default:,}.", False))
-    return default
+
+def ask_int(prompt, default=None, high=10_000_000):
+    while True:
+        
+        raw = input(f"\n{prompt}: ").replace(",", "").strip()
+        
+
+        if not raw and default is not None:
+            return default
+            
+        if raw.isdigit() and 0 < int(raw) <= high:
+            return int(raw)
+            
+        print(paint("Invalid input. Please enter a valid number.", False))
 
 def has_data():
     if state["data"] is None:
@@ -99,11 +105,15 @@ def show_menu():
 
 def generate():
     screen("GENERATE DATA")
+    
     size = ask_int("Number of data", 100_000)
+    
     state["data"] = generate_data(size)
     state["seq"] = None
     state["par"] = None
+    
     clear()
+    
     screen("GENERATE DATA", [
         f"Generating {size:,} numbers...", 
         "",
