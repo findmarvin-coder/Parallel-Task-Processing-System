@@ -2,6 +2,7 @@ import multiprocessing as mp
 import os
 import re
 import sys
+import time
 
 from data_generator import generate_data
 from sequential import run_sequential
@@ -25,17 +26,27 @@ state = {
 }
 
 def clear():
+
     if os.name == 'nt':
         os.system('cls')
     else:
         os.system('clear')
-        print('\033[2J\033[H', end='')
-    screen("METRO BUSINESS COLLEGE", ["FINAL PROJECT".center(WIDTH - 4)])
+        sys.stdout.write('\033[2J\033[H')
+        sys.stdout.flush()
+
+def tprint(text, speed=0.01, end="\n"):
+    "Typewriter print effect for specific lines."
+    for char in text:
+        sys.stdout.write(char)
+        sys.stdout.flush()
+        time.sleep(speed)
+    sys.stdout.write(end)
+    sys.stdout.flush()
 
 def paint(text, ok):
     return f"{GREEN if ok else RED}{text}{RESET}"
 
-def screen(title, lines=None):
+def screen(title, lines=None, typewrite=False):
     if lines is None:
         lines = []
     
@@ -48,12 +59,18 @@ def screen(title, lines=None):
         for line in lines:
             visible_len = len(re.sub(r"\033\[[0-9;]*m", "", line))
             gap = max(0, inner - 2 - visible_len)
-            print("│ " + line + " " * gap + " │")
+            
+            if typewrite:
+                
+                sys.stdout.write("│ ")
+                sys.stdout.flush()
+                tprint(line, speed=0.01, end="")
+                print(" " * gap + " │")
+            else:
+                print("│ " + line + " " * gap + " │")
             
     print("└" + "─" * inner + "┘")
-
 def ask_int(prompt, default, high=10_000_000):
-    # Removed the broken box here - just a clean prompt below the previous box
     raw = input(f"\n{prompt} [{default:,}]: ").replace(",", "").strip()
     
     if raw.isdigit() and 0 < int(raw) <= high:
@@ -69,6 +86,8 @@ def has_data():
     return True
 
 def show_menu():
+    # School banner only - MBC
+    screen("METRO BUSINESS COLLEGE", ["FINAL PROJECT".center(WIDTH - 4)])
     screen("PARALLEL TASK PROCESSING SYSTEM", [
         "[1] Generate Data", 
         "[2] Sequential Processing", 
@@ -79,6 +98,7 @@ def show_menu():
     ])
 
 def generate():
+    screen("GENERATE DATA")
     size = ask_int("Number of data", 100_000)
     state["data"] = generate_data(size)
     state["seq"] = None
@@ -88,9 +108,9 @@ def generate():
         f"Generating {size:,} numbers...", 
         "",
         paint("Data successfully generated!", True)
-    ])
+    ], typewrite=True)
 
-# PART 2 - 
+# PART 2 - Cris
 
 def result_lines(r, parallel=False):
     lines = [f"Number of Processes: {r['processes']}", ""] if parallel else []
@@ -110,16 +130,17 @@ def sequential():
     if has_data():
         state["seq"] = run_sequential(state["data"])
         clear()
-        screen("SEQUENTIAL PROCESSING", result_lines(state["seq"]))
+        screen("SEQUENTIAL PROCESSING", result_lines(state["seq"]), typewrite=True)
 
-# PART 3 - 
+# PART 3 - Mia
 
 def parallel():
     if has_data():
+        screen("PARALLEL PROCESSING")
         state["processes"] = ask_int("Number of processes", state["processes"], 64)
         state["par"] = run_parallel(state["data"], state["processes"])
         clear()
-        screen("PARALLEL PROCESSING", result_lines(state["par"], parallel=True))
+        screen("PARALLEL PROCESSING", result_lines(state["par"], parallel=True), typewrite=True)
 
 # PART 4 - Faye
 
@@ -147,7 +168,7 @@ def compare():
         paint("for this workload.", faster), 
         "",
         "Results match: " + paint("YES" if match else "NO", match)
-    ])
+    ], typewrite=True)
 
     run_tests = input("\nRun the 5 dataset tests and save to results/? (Y/n): ").lower()
     
@@ -155,19 +176,22 @@ def compare():
         benchmark()
 
 def display():
+    screen("FINAL PERFORMANCE RESULT")
+
     if not (state["seq"] or state["par"]):
         screen("NOTICE", [paint("Nothing to display yet.", False)])
     if state["seq"]:
-        screen("SEQUENTIAL PROCESSING", result_lines(state["seq"]))
+        screen("SEQUENTIAL PROCESSING", result_lines(state["seq"]), typewrite=True)
     if state["par"]:
-        screen("PARALLEL PROCESSING", result_lines(state["par"], parallel=True))
+        screen("PARALLEL PROCESSING", result_lines(state["par"], parallel=True), typewrite=True)
 
 def benchmark():
     clear()
-    print(f"Running 5 tests with {state['processes']} processes...\n")
+    screen("DATASET TESTING")
+    print(f"\nRunning 5 tests with {state['processes']} processes...\n")
     rows = run_benchmark(state["processes"])
-    clear()
     
+    clear()
     lines = [
         f"Number of Processes: {state['processes']}", 
         "",
@@ -182,7 +206,7 @@ def benchmark():
     if not all(r["correct"] for r in rows):
         lines += ["", paint("Some tests produced mismatched results!", False)]
         
-    screen("DATASET TESTING", lines)
+    screen("DATASET TESTING", lines, typewrite=True)
     
     print(paint("\nSaved: " + os.path.relpath(save_csv(rows)), True))
     graph = save_graph(rows, state["processes"])
@@ -207,7 +231,6 @@ def main():
         clear()
         show_menu()
         
-        # Clean prompt matching the professor's overview document
         choice = input("\nEnter your choice: ").strip()
         
         if choice == "6":
@@ -215,7 +238,7 @@ def main():
             screen("PROGRAM COMPLETED")
             break
             
-        clear()
+        clear() 
         if choice in ACTIONS:
             ACTIONS[choice]()
         else:
