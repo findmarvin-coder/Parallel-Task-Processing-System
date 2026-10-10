@@ -5,7 +5,7 @@ from sequential import run_sequential
 from parallel import run_parallel
 
 def speedup(seq_time, par_time):
-    """Calculate how many times faster the parallel execution is."""
+    
     if par_time <= 0: return 0
     return seq_time / par_time
 
@@ -14,13 +14,13 @@ def verify(seq_result, par_result):
     for k in keys:
         if seq_result[k] != par_result[k]:
             return False
-    # Check average with slight tolerance for float rounding
+
     if abs(seq_result["average"] - par_result["average"]) > 0.01:
         return False
     return True
 
 def run_benchmark(processes):
-    """Run tests across 5 different dataset sizes as required."""
+    
     sizes = [10_000, 50_000, 100_000, 500_000, 1_000_000]
     rows = []
     
@@ -52,7 +52,7 @@ def save_csv(rows, folder="results"):
     return filepath
 
 def save_graph(rows, processes, folder="results"):
-    """Generate and save a line graph comparing execution times."""
+
     try:
         import matplotlib.pyplot as plt
     except ImportError:
