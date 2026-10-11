@@ -19,14 +19,15 @@ GREEN, RED, RESET = ("\033[92m", "\033[91m", "\033[0m") if COLOR else ("", "", "
 WIDTH = 56
 
 state = {
-    "data": None, 
+    "data": None,
+    "target": None,
     "seq": None, 
     "par": None, 
     "processes": mp.cpu_count()
 }
 
 def clear():
-
+    """Clears the screen entirely without printing the school banner."""
     if os.name == 'nt':
         os.system('cls')
     else:
@@ -35,7 +36,6 @@ def clear():
         sys.stdout.flush()
 
 def tprint(text, speed=0.01, end="\n"):
-    "Typewriter print effect for specific lines."
     for char in text:
         sys.stdout.write(char)
         sys.stdout.flush()
@@ -61,7 +61,6 @@ def screen(title, lines=None, typewrite=False):
             gap = max(0, inner - 2 - visible_len)
             
             if typewrite:
-                
                 sys.stdout.write("│ ")
                 sys.stdout.flush()
                 tprint(line, speed=0.01, end="")
@@ -72,11 +71,16 @@ def screen(title, lines=None, typewrite=False):
     print("└" + "─" * inner + "┘")
 
 def ask_int(prompt, default=None, high=10_000_000):
+    inner = WIDTH - 2
     while True:
+        # Draws a perfect, closed box for the prompt
+        print("\n┌" + "─" * inner + "┐")
+        print("│" + f"{prompt}:".center(inner) + "│")
+        print("└" + "─" * inner + "┘")
         
-        raw = input(f"\n{prompt}: ").replace(",", "").strip()
+        # You type on the line immediately below the box
+        raw = input("  > ").replace(",", "").strip()
         
-
         if not raw and default is not None:
             return default
             
@@ -92,9 +96,11 @@ def has_data():
     return True
 
 def show_menu():
-    # School banner only - MBC
-    screen("METRO BUSINESS COLLEGE", ["FINAL PROJECT".center(WIDTH - 4)])
+    # Merged the school banner perfectly into the main menu box!
     screen("PARALLEL TASK PROCESSING SYSTEM", [
+        "METRO BUSINESS COLLEGE".center(WIDTH - 4),
+        "FINAL PROJECT".center(WIDTH - 4),
+        "─" * (WIDTH - 4),
         "[1] Generate Data", 
         "[2] Sequential Processing", 
         "[3] Parallel Processing",
@@ -105,22 +111,23 @@ def show_menu():
 
 def generate():
     screen("GENERATE DATA")
-    
     size = ask_int("Number of data", 100_000)
+    target = ask_int("Target number to search for: ", 50)
     
     state["data"] = generate_data(size)
+    state["target"] = target
     state["seq"] = None
     state["par"] = None
     
     clear()
-    
     screen("GENERATE DATA", [
         f"Generating {size:,} numbers...", 
+        f"Target number to search: {target}",
         "",
         paint("Data successfully generated!", True)
     ], typewrite=True)
 
-# PART 2 - Cris
+# PART 2 - 
 
 def result_lines(r, parallel=False):
     lines = [f"Number of Processes: {r['processes']}", ""] if parallel else []
@@ -133,22 +140,25 @@ def result_lines(r, parallel=False):
         f"Even Numbers: {r['even']:,}", 
         f"Odd Numbers: {r['odd']:,}", 
         "",
+        f"Target Found: {r['found']:,} times",
+        f"Dataset Sorted: YES",
+        "",
         f"Execution Time: {r['time']:.4f} seconds"
     ]
 
 def sequential():
     if has_data():
-        state["seq"] = run_sequential(state["data"])
+        state["seq"] = run_sequential(state["data"], state["target"])
         clear()
         screen("SEQUENTIAL PROCESSING", result_lines(state["seq"]), typewrite=True)
 
-# PART 3 - Mia
+# PART 3 - 
 
 def parallel():
     if has_data():
         screen("PARALLEL PROCESSING")
         state["processes"] = ask_int("Number of processes", state["processes"], 64)
-        state["par"] = run_parallel(state["data"], state["processes"])
+        state["par"] = run_parallel(state["data"], state["processes"], state["target"])
         clear()
         screen("PARALLEL PROCESSING", result_lines(state["par"], parallel=True), typewrite=True)
 
@@ -158,8 +168,8 @@ def compare():
     if not has_data():
         return
         
-    state["seq"] = state["seq"] or run_sequential(state["data"])
-    state["par"] = state["par"] or run_parallel(state["data"], state["processes"])
+    state["seq"] = state["seq"] or run_sequential(state["data"], state["target"])
+    state["par"] = state["par"] or run_parallel(state["data"], state["processes"], state["target"])
     
     s = state["seq"]
     p = state["par"]
@@ -180,7 +190,8 @@ def compare():
         "Results match: " + paint("YES" if match else "NO", match)
     ], typewrite=True)
 
-    run_tests = input("\nRun the 5 dataset tests and save to results/? (Y/n): ").lower()
+    # Clean instant prompt below the box
+    run_tests = input("\nRun the 5 dataset tests and save results? (Y/n): ").lower()
     
     if run_tests != "n":
         benchmark()
@@ -226,6 +237,7 @@ def benchmark():
     else:
         print(paint("Graph not saved. Run: pip install matplotlib", False))
 
+# PART 5 - 
 
 ACTIONS = {
     "1": generate, 
@@ -240,6 +252,7 @@ def main():
         clear()
         show_menu()
         
+        # Clean instant prompt below the box
         choice = input("\nEnter your choice: ").strip()
         
         if choice == "6":
@@ -247,12 +260,13 @@ def main():
             screen("PROGRAM COMPLETED")
             break
             
-        clear() 
+        clear()
         if choice in ACTIONS:
             ACTIONS[choice]()
         else:
             screen("NOTICE", [paint("Invalid choice. Please enter 1-6.", False)])
             
+        # Clean instant prompt below the box
         input("\nPress Enter to return to the menu...")
 
 if __name__ == "__main__":
