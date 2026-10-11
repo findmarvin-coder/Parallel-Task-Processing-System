@@ -2,7 +2,6 @@ import time
 import math
 
 def run_sequential(data, target=None):
-    """Process the dataset sequentially on a single thread."""
     start_time = time.time()
     
     if not data:
@@ -17,7 +16,7 @@ def run_sequential(data, target=None):
     
     # Task 1, 2, and 3: Math, Classification, and Searching
     for x in data:
-        _ = math.factorial(15)  # Artificial CPU load
+        _ = math.factorial(15) 
         
         total += x
         if x < min_val: min_val = x

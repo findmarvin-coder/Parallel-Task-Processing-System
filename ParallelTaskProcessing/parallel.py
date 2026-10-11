@@ -29,7 +29,7 @@ def process_chunk(args):
         if target is None or x == target: 
             found += 1
             
-    # Sorting Task (Worker sorts just its own small chunk)
+    # Sorting Task, the worker sorts just its own small chunk
     sorted_chunk = sorted(chunk)
         
     return total, len(chunk), min_val, max_val, even, odd, found, sorted_chunk
@@ -49,7 +49,7 @@ def run_parallel(data, num_processes, target=None):
     with mp.Pool(processes=num_processes) as pool:
         results = pool.map(process_chunk, args)
 
-    # Combine all the math results from the different processes
+
     total = sum(r[0] for r in results)
     count = sum(r[1] for r in results)
     avg = total / count if count else 0

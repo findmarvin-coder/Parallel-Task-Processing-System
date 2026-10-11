@@ -96,7 +96,7 @@ def has_data():
     return True
 
 def show_menu():
-    # Merged the school banner perfectly into the main menu box!
+
     screen("PARALLEL TASK PROCESSING SYSTEM", [
         "METRO BUSINESS COLLEGE".center(WIDTH - 4),
         "FINAL PROJECT".center(WIDTH - 4),
@@ -127,7 +127,7 @@ def generate():
         paint("Data successfully generated!", True)
     ], typewrite=True)
 
-# PART 2 - 
+# PART 2 - Cris
 
 def result_lines(r, parallel=False):
     lines = [f"Number of Processes: {r['processes']}", ""] if parallel else []
@@ -152,7 +152,7 @@ def sequential():
         clear()
         screen("SEQUENTIAL PROCESSING", result_lines(state["seq"]), typewrite=True)
 
-# PART 3 - 
+# PART 3 - Mia
 
 def parallel():
     if has_data():
@@ -237,8 +237,6 @@ def benchmark():
     else:
         print(paint("Graph not saved. Run: pip install matplotlib", False))
 
-# PART 5 - 
-
 ACTIONS = {
     "1": generate, 
     "2": sequential, 
@@ -251,8 +249,7 @@ def main():
     while True:
         clear()
         show_menu()
-        
-        # Clean instant prompt below the box
+
         choice = input("\nEnter your choice: ").strip()
         
         if choice == "6":
@@ -265,8 +262,8 @@ def main():
             ACTIONS[choice]()
         else:
             screen("NOTICE", [paint("Invalid choice. Please enter 1-6.", False)])
+
             
-        # Clean instant prompt below the box
         input("\nPress Enter to return to the menu...")
 
 if __name__ == "__main__":
