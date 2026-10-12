@@ -70,15 +70,17 @@ def screen(title, lines=None, typewrite=False):
             
     print("└" + "─" * inner + "┘")
 
-def ask_int(prompt, default=None, high=10_000_000):
+def ask_int(prompt, default=None, high=10_000_000, hint=None):
     inner = WIDTH - 2
     while True:
         # Draws a perfect, closed box for the prompt
-        print("\n┌" + "─" * inner + "┐")
+        print("┌" + "─" * inner + "┐")
         print("│" + f"{prompt}:".center(inner) + "│")
+        if hint:
+            print("│" + f"({hint})".center(inner) + "│")
         print("└" + "─" * inner + "┘")
         
-        # You type on the line immediately below the box
+        
         raw = input("  > ").replace(",", "").strip()
         
         if not raw and default is not None:
@@ -112,7 +114,7 @@ def show_menu():
 def generate():
     screen("GENERATE DATA")
     size = ask_int("Number of data", 100_000)
-    target = ask_int("Target number to search for: ", 50)
+    target = ask_int("Target number to search for", 50, high=100, hint="between 1 and 100")
     
     state["data"] = generate_data(size)
     state["target"] = target
@@ -190,7 +192,7 @@ def compare():
         "Results match: " + paint("YES" if match else "NO", match)
     ], typewrite=True)
 
-    # Clean instant prompt below the box
+
     run_tests = input("\nRun the 5 dataset tests and save results? (Y/n): ").lower()
     
     if run_tests != "n":
@@ -262,7 +264,6 @@ def main():
             ACTIONS[choice]()
         else:
             screen("NOTICE", [paint("Invalid choice. Please enter 1-6.", False)])
-
             
         input("\nPress Enter to return to the menu...")
 

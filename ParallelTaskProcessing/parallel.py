@@ -26,7 +26,7 @@ def process_chunk(args):
         else: odd += 1
         
         # Searching Task
-        if target is None or x == target: 
+        if target is not None and x == target:
             found += 1
             
     # Sorting Task, the worker sorts just its own small chunk

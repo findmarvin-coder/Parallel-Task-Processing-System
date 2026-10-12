@@ -25,7 +25,7 @@ def run_sequential(data, target=None):
         else: odd += 1
         
         # Searching Task
-        if target is None or x == target: 
+        if target is not None and x == target:
             found += 1
             
     avg = total / len(data)
